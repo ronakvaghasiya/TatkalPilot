@@ -1,0 +1,247 @@
+{
+  "name": "Tatkal Hybrid Booking (n8n + Python)",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": [
+          {
+            "mode": "everyDay",
+            "hour": 9,
+            "minute": 58
+          }
+        ]
+      },
+      "id": "Cron AC",
+      "name": "AC Reminder 09:58",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "triggerTimes": [
+          {
+            "mode": "everyDay",
+            "hour": 10,
+            "minute": 58
+          }
+        ]
+      },
+      "id": "Cron SL",
+      "name": "SL Reminder 10:58",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "chatId": "={{$env.TELEGRAM_CHAT_ID}}",
+        "text": "Tatkal booking starts soon. Be ready!"
+      },
+      "id": "Tel Remind",
+      "name": "Telegram - Reminder",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "credentials": {
+        "telegramApi": {
+          "id": "={{$env.TELEGRAM_CRED_ID}}"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "start-booking",
+        "httpMethod": "POST",
+        "responseMode": "onReceived",
+        "responseData": "Default Response"
+      },
+      "id": "WH Start",
+      "name": "Webhook - /start-booking",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:5000/start-booking",
+        "jsonParameters": true,
+        "bodyParametersJson": "={{$json}}"
+      },
+      "id": "HTTP Start Py",
+      "name": "HTTP \u2192 Python start",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "path": "booking-status",
+        "httpMethod": "POST",
+        "responseMode": "onReceived",
+        "responseData": "Default Response"
+      },
+      "id": "WH Status",
+      "name": "Webhook - /booking-status",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "chatId": "={{$env.TELEGRAM_CHAT_ID}}",
+        "text": "={{\"[\" + $json.session_id + \"] \" + ($json.event ?? 'update') + ( $json.msg ? (': ' + $json.msg) : '' ) + ( $json.error ? (' | ERROR: ' + $json.error) : '' ) }}"
+      },
+      "id": "Tel Status",
+      "name": "Telegram - Status",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "credentials": {
+        "telegramApi": {
+          "id": "={{$env.TELEGRAM_CRED_ID}}"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "captcha-in",
+        "httpMethod": "POST",
+        "responseMode": "onReceived",
+        "responseData": "Default Response",
+        "options": {
+          "binaryData": true
+        }
+      },
+      "id": "WH Captcha In",
+      "name": "Webhook - /captcha-in",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "chatId": "={{$env.TELEGRAM_CHAT_ID}}",
+        "additionalFields": {
+          "caption": "={{\"Session: \" + $json.session_id + \"\\nReply: /cap \" + $json.session_id + \" <captcha>\"}}"
+        },
+        "binaryPropertyName": "captcha"
+      },
+      "id": "Tel Captcha",
+      "name": "Telegram - Send Captcha",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "credentials": {
+        "telegramApi": {
+          "id": "={{$env.TELEGRAM_CRED_ID}}"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": "message"
+      },
+      "id": "Tel Trigger",
+      "name": "Telegram - Trigger (/cap)",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1,
+      "credentials": {
+        "telegramApi": {
+          "id": "={{$env.TELEGRAM_CRED_ID}}"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "const msg = $json.message && $json.message.text ? $json.message.text.trim() : '';\nif(!msg.startsWith('/cap')) return [];\nconst parts = msg.split(' ');\nif(parts.length < 3) return [];\nreturn [{json:{session_id: parts[1], captcha_text: parts.slice(2).join(' ')}}];"
+      },
+      "id": "Fn Parse Cap",
+      "name": "Function - Parse /cap",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:5000/captcha-answer",
+        "jsonParameters": true,
+        "bodyParametersJson": "={{$json}}"
+      },
+      "id": "HTTP Cap Ans",
+      "name": "HTTP \u2192 Python captcha-answer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3
+    }
+  ],
+  "connections": {
+    "AC Reminder 09:58": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Reminder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SL Reminder 10:58": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Reminder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook - /start-booking": {
+      "main": [
+        [
+          {
+            "node": "HTTP \u2192 Python start",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook - /booking-status": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook - /captcha-in": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Send Captcha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram - Trigger (/cap)": {
+      "main": [
+        [
+          {
+            "node": "Function - Parse /cap",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Function - Parse /cap": {
+      "main": [
+        [
+          {
+            "node": "HTTP \u2192 Python captcha-answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false
+}
