@@ -1,4 +1,4 @@
-# Tatkal Hybrid Booking (n8n + Python Selenium)
+# TatkalFlow  Booking (n8n + Python Selenium)
 
 > Legal & safe helper. **No captcha auto-solve or policy bypass.** Captcha is relayed to you via Telegram, you reply `/cap <session> <text>` and the script fills it.
 
@@ -16,7 +16,7 @@
 ## Setup
 1. **Python env**
    ```bash
-   cd tatkal_hybrid
+   cd TatkalFlow 
    python -m venv .venv
    source .venv/bin/activate  # Windows: .venv\Scripts\activate
    pip install -r requirements.txt
