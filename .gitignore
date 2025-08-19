@@ -1,0 +1,49 @@
+# Python cache & build
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual env
+.venv/
+env/
+venv/
+ENV/
+
+# Logs & temp
+*.log
+*.tmp
+*.swp
+*.DS_Store
+*.idea/
+.vscode/
+*.sqlite3
+
+# Selenium/Chrome stuff
+chromedriver
+chromedriver.exe
+*.crdownload
+*.unconfirmed
+*.part
+
+# Local config
+.env
+config.env
+config.local.json
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# n8n specific (if local db is used)
+.local-db/
+n8n.sqlite
+
+# Node modules (if n8n workflow repo merged)
+node_modules/
